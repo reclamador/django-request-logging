@@ -11,8 +11,12 @@ class LoggingMiddleware(object):
     def process_request(self, request):
         request_logger.info(colorize("{} {}".format(request.method, request.get_full_path()), fg="cyan"))
         headers = {k: v for k, v in request.META.items() if k.startswith('HTTP_') or k.startswith('REMOTE')}
+        user = getattr(request, 'user', None)
+        if user and user.is_authenticated():
+            headers.update({'user': user.username})
+
         if headers:
-            self._log(headers)
+            self._log(headers, logging.INFO)
         if request.body:
             self._log(self._chunked_to_max(request.body))
 
