@@ -1,17 +1,16 @@
 import logging
 import re
 from django.utils.termcolors import colorize
-from django.utils.deprecation import MiddlewareMixin
 
 MAX_BODY_LENGTH = 50000  # log no more than 3k bytes of content
 request_logger = logging.getLogger('django.request')
 
 
-class LoggingMiddleware(MiddlewareMixin):
+class LoggingMiddleware(object):
 
     def process_request(self, request):
         request_logger.info(colorize("{} {}".format(request.method, request.get_full_path()), fg="cyan"))
-        headers = {k: v for k, v in request.META.items() if k.startswith('HTTP_')}
+        headers = {k: v for k, v in request.META.items() if k.startswith('HTTP_') or k.startswith('REMOTE')}
         if headers:
             self._log(headers)
         if request.body:
@@ -32,6 +31,7 @@ class LoggingMiddleware(MiddlewareMixin):
         if not re.match('^application/json', response.get('Content-Type', ''), re.I):  # only log content type: 'application/xxx'
             return
 
+        self._log(response._headers, level)
         self._log(response._headers, level)
         self._log(self._chunked_to_max(response.content), level)
 
