@@ -1,3 +1,8 @@
+# make it compatible to django 1.10
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    MiddlewareMixin = object
 import logging
 import re
 from django.utils.termcolors import colorize
@@ -6,7 +11,7 @@ MAX_BODY_LENGTH = 50000  # log no more than 3k bytes of content
 request_logger = logging.getLogger('django.request')
 
 
-class LoggingMiddleware(object):
+class LoggingMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         headers = {k: v for k, v in request.META.items() if k.startswith('HTTP_') or k.startswith('REMOTE')}
